@@ -64,6 +64,9 @@
                     Gérer le compte
                   </Dropdown::Item>
                   {{#if this.currentUser.isAdminInOrganization}}
+                    <Dropdown::Item @onClick={{fn this.openEditStudentNumberModal student}}>
+                      Éditer le numéro étudiant
+                    </Dropdown::Item>
                     <Dropdown::Item @onClick={{fn this.openDissociateModal student}}>
                       Dissocier le compte
                     </Dropdown::Item>
@@ -88,6 +91,12 @@
     @student={{this.student}}
     @display={{this.isShowingAuthenticationMethodModal}}
     @close={{this.closeAuthenticationMethodModal}}
+  />
+  <EditStudentNumberModal
+    @student={{this.student}}
+    @display={{this.isShowingEditStudentNumberModal}}
+    @close={{this.closeEditStudentNumberModal}}
+    @refreshModel={{@refreshModel}}
   />
   <DissociateUserModal
     @student={{this.student}}
