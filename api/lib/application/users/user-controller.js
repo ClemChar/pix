@@ -191,5 +191,13 @@ module.exports = {
     const userId = parseInt(request.params.id);
     await usecases.anonymizeUser({ userId });
     return h.response({}).code(204);
+  },
+
+  async updateUserSamlId(request, h) {
+    const userId = parseInt(request.params.id);
+    const externalUserToken = request.payload.data.attributes['external-user-token'];
+
+    await usecases.updateUserSamlId({ userId, externalUserToken });
+    return h.response().code(204);
   }
 };
