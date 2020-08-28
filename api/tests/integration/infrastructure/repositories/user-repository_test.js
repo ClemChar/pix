@@ -1,7 +1,11 @@
-const { expect, knex, databaseBuilder, domainBuilder, catchErr } = require('../../../test-helper');
 const faker = require('faker');
 const bcrypt = require('bcrypt');
-const _ = require('lodash');
+
+const each = require('lodash/each');
+const map = require('lodash/map');
+const times = require('lodash/times');
+
+const { expect, knex, databaseBuilder, domainBuilder, catchErr } = require('../../../test-helper');
 
 const {
   AlreadyRegisteredEmailError, AlreadyRegisteredUsernameError, SchoolingRegistrationAlreadyLinkedToUserError,
@@ -896,7 +900,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     context('when there are users in the database', () => {
 
       beforeEach(() => {
-        _.times(3, databaseBuilder.factory.buildUser);
+        times(3, databaseBuilder.factory.buildUser);
 
         return databaseBuilder.commit();
       });
@@ -921,7 +925,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     context('when there are lots of users (> 10) in the database', () => {
 
       beforeEach(() => {
-        _.times(12, databaseBuilder.factory.buildUser);
+        times(12, databaseBuilder.factory.buildUser);
 
         return databaseBuilder.commit();
       });
@@ -962,7 +966,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         const { models: matchingUsers, pagination } = await userRepository.findPaginatedFiltered({ filter, page });
 
         // then
-        expect(_.map(matchingUsers, 'firstName')).to.have.members(['Son Gohan', 'Son Goku', 'Son Goten']);
+        expect(map(matchingUsers, 'firstName')).to.have.members(['Son Gohan', 'Son Goku', 'Son Goten']);
         expect(pagination).to.deep.equal(expectedPagination);
       });
     });
@@ -970,7 +974,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     context('when there are multiple users matching the same "last name" search pattern', () => {
 
       beforeEach(async () => {
-        _.each([
+        each([
           { firstName: 'Anakin', lastName: 'Skywalker' },
           { firstName: 'Luke', lastName: 'Skywalker' },
           { firstName: 'Leia', lastName: 'Skywalker' },
@@ -993,7 +997,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         const { models: matchingUsers, pagination } = await userRepository.findPaginatedFiltered({ filter, page });
 
         // then
-        expect(_.map(matchingUsers, 'firstName')).to.have.members(['Anakin', 'Luke', 'Leia']);
+        expect(map(matchingUsers, 'firstName')).to.have.members(['Anakin', 'Luke', 'Leia']);
         expect(pagination).to.deep.equal(expectedPagination);
       });
     });
@@ -1001,7 +1005,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     context('when there are multiple users matching the same "email" search pattern', () => {
 
       beforeEach(async () => {
-        _.each([
+        each([
           { email: 'playpus@pix.fr' },
           { email: 'panda@pix.fr' },
           { email: 'otter@pix.fr' },
@@ -1024,7 +1028,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         const { models: matchingUsers, pagination } = await userRepository.findPaginatedFiltered({ filter, page });
 
         // then
-        expect(_.map(matchingUsers, 'email')).to.have.members(['playpus@pix.fr', 'panda@pix.fr', 'otter@pix.fr']);
+        expect(map(matchingUsers, 'email')).to.have.members(['playpus@pix.fr', 'panda@pix.fr', 'otter@pix.fr']);
         expect(pagination).to.deep.equal(expectedPagination);
       });
     });
@@ -1032,7 +1036,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     context('when there are multiple users matching the fields "first name", "last name" and "email" search pattern', () => {
 
       beforeEach(async () => {
-        _.each([
+        each([
           // Matching users
           { firstName: 'fn_ok_1', lastName: 'ln_ok_1', email: 'email_ok_1@mail.com' },
           { firstName: 'fn_ok_2', lastName: 'ln_ok_2', email: 'email_ok_2@mail.com' },
@@ -1059,9 +1063,9 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         const { models: matchingUsers, pagination } = await userRepository.findPaginatedFiltered({ filter, page });
 
         // then
-        expect(_.map(matchingUsers, 'firstName')).to.have.members(['fn_ok_1', 'fn_ok_2', 'fn_ok_3']);
-        expect(_.map(matchingUsers, 'lastName')).to.have.members(['ln_ok_1', 'ln_ok_2', 'ln_ok_3']);
-        expect(_.map(matchingUsers, 'email')).to.have.members(['email_ok_1@mail.com', 'email_ok_2@mail.com', 'email_ok_3@mail.com']);
+        expect(map(matchingUsers, 'firstName')).to.have.members(['fn_ok_1', 'fn_ok_2', 'fn_ok_3']);
+        expect(map(matchingUsers, 'lastName')).to.have.members(['ln_ok_1', 'ln_ok_2', 'ln_ok_3']);
+        expect(map(matchingUsers, 'email')).to.have.members(['email_ok_1@mail.com', 'email_ok_2@mail.com', 'email_ok_3@mail.com']);
         expect(pagination).to.deep.equal(expectedPagination);
       });
     });
@@ -1088,7 +1092,7 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         const { models: matchingUsers, pagination } = await userRepository.findPaginatedFiltered({ filter, page });
 
         // then
-        expect(_.map(matchingUsers, 'id')).to.have.members([firstUserId, secondUserId]);
+        expect(map(matchingUsers, 'id')).to.have.members([firstUserId, secondUserId]);
         expect(pagination).to.deep.equal(expectedPagination);
       });
     });
@@ -1325,6 +1329,39 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
 
       // when
       const error = await catchErr(userRepository.updateExpiredPassword)({ userId: wrongUserId, hashedNewPassword });
+
+      // then
+      expect(error).to.be.instanceOf(UserNotFoundError);
+    });
+  });
+
+  describe('#updateSamlId', () => {
+
+    let userId;
+
+    beforeEach(async () => {
+      userId = databaseBuilder.factory.buildUser({ samlId: null }).id;
+      await databaseBuilder.commit();
+    });
+
+    it('should update the user\'s samlId', async () => {
+      // given
+      const expectedSamlId = 'abcd';
+
+      // when
+      const result = await userRepository.updateSamlId({ userId, samlId: expectedSamlId });
+
+      // then
+      expect(result).to.be.true;
+    });
+
+    it('should throw UserNotFoundError when user id is not found', async () => {
+      // given
+      const wrongUserId = 0;
+      const samlId = 'abcd';
+
+      // when
+      const error = await catchErr(userRepository.updateSamlId)({ userId: wrongUserId, samlId });
 
       // then
       expect(error).to.be.instanceOf(UserNotFoundError);
