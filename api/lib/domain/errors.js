@@ -320,6 +320,12 @@ class InvalidCertificationCandidate extends DomainError {
   }
 }
 
+class InvalidExternalUserTokenError extends DomainError {
+  constructor(message = 'L\'idToken de l\'utilisateur externe est invalide.') {
+    super(message);
+  }
+}
+
 class InvalidRecaptchaTokenError extends DomainError {
   constructor(message = 'Token de recaptcha invalide.') {
     super(message);
@@ -573,6 +579,7 @@ module.exports = {
   ImproveCompetenceEvaluationForbiddenError,
   InvalidCertificationCandidate,
   InvalidCertificationReportForFinalization,
+  InvalidExternalUserTokenError,
   InvalidParametersForSessionPublication,
   InvalidRecaptchaTokenError,
   InvalidTemporaryKeyError,
