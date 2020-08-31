@@ -12,7 +12,7 @@
         <h2 class="modal-header__title" id={{this.labelId}}>
           {{@title}}
         </h2>
-        <button class="modal-header__icon icon-button" aria-label="Fermer la fenêtre" type="button" {{on 'click' @close}}>
+        <button data-test-dialogButtonClose class="modal-header__icon icon-button" aria-label="Fermer la fenêtre" type="button" {{on 'click' @close}}>
           <FaIcon @icon='times'></FaIcon>
         </button>
       </div>

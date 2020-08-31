@@ -20,4 +20,17 @@ export default class StudentAdapter extends ApplicationAdapter {
     const url = `${this.host}/${this.namespace}/schooling-registration-user-associations`;
     return this.ajax(url, 'DELETE', { data });
   }
+
+  updateStudentNumber(studentId, newStudentNumber) {
+    const data = {
+      data: {
+        attributes: {
+          'student-number': newStudentNumber,
+        }
+      }
+    };
+
+    const url = `${this.host}/${this.namespace}/schooling-registration-user-associations/${studentId}`;
+    return this.ajax(url, 'PATCH', { data });
+  }
 }

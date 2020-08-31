@@ -1,7 +1,6 @@
-<Modal::Dialog class="edit-student-number-modal" @title="Édition du numéro étudiant" @display={{@display}} @close={{@close}}>
+<Modal::Dialog class="edit-student-number-modal" @title="Édition du numéro étudiant" @display={{@display}} @close={{this.close}}>
   <Modal::Body class="edit-student-number-modal__content">
-    <p class="content-text">
-      Numéro étudiant actuel : 
+    <p class="content-text">Numéro étudiant actuel de {{@student.firstName}} {{@student.lastName}} est : 
       <span class=" content-text--info">{{@student.studentNumber}}</span>
     </p>
     <p class="content-text">
@@ -9,18 +8,26 @@
     </p>
     <div>
       <Input
+        data-test-input
         id="studentNumber"
         name="studentNumber"
         @type="text"
         @value={{this.newStudentNumber}}
         class="input button--centered"
         placeholder="Exemple : {{@student.studentNumber}}"
-        disabled={{false}}
       />
+
+      <div data-test-error class='form__error error-message'>
+        {{this.error}}
+      </div>
     </div>
   </Modal::Body>
   <Modal::Footer class="edit-student-number-modal__actions">
-    <button type="button" class="button button--bordered-grey" {{on 'click' @close}}>Annuler</button>
-    <button type="button" class="button" {{on 'click' (fn this.updateStudentNumber this.newStudentNumber)}}>Mettre à jour l'identifiant</button>
+    <button data-test-cancel type="button" class="button button--bordered-grey" {{on 'click' this.close}}>Annuler</button>
+    {{#if this.isDisable}}
+      <button data-test-updateButton type="button" id="updateStudentNumber" disabled='true' class="button disabled">Mettre à jour</button>
+    {{else}}
+      <button data-test-updateButton type="button" id="updateStudentNumber" class="button" {{on 'click' (fn this.updateStudentNumber)}}>Mettre à jour</button>
+    {{/if}}
   </Modal::Footer>
 </Modal::Dialog>

@@ -8,6 +8,15 @@
     }
   }
 
+  .disabled {
+    background-color: $grey-30;
+    border: none;
+    
+    &:hover {
+      cursor: default;
+    }
+  }
+
   .button--bordered {
     color: $blue;
     border-color: $blue;

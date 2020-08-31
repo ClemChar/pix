@@ -7,23 +7,44 @@ export default class EditStudentNumberModal extends Component {
   @service notifications;
   @service store;
 
+  @tracked error = null;
   @tracked newStudentNumber = null;
 
+  get isDisable() {
+    const emptyValues = ['', null];
+    return emptyValues.includes(this.newStudentNumber);
+  }
+
   @action
-  updateStudentNumber(newStudentNumber) {
+  async updateStudentNumber() {
     const adapter = this.store.adapterFor('student');
+    try {
+      await adapter.updateStudentNumber(this.args.student.id, this.newStudentNumber);
+      this.notifications.sendSuccess(`La modification du numéro étudiant ${this.args.student.firstName} ${this.args.student.lastName} a bien été effectué.`);
+      this._clean();
+      this.args.close();
+      this.args.refreshModel();
+    } catch (errorResponse) {
+      this._handleError(errorResponse);
+    }
+  }
 
-    console.log(newStudentNumber);
+  @action
+  close() {
+    this._clean();
+    this.args.close();
+  }
+    
+  _handleError(errorResponse) {
+    errorResponse.errors.forEach((error) => {
+      if (error.status === '412') {
+        this.error = error.detail;
+      }
+    });
+  }
 
-    this.notifications.sendSuccess(`Le numéro de l’élève ${this.args.student.lastName} ${this.args.student.firstName} a bien été modifié.`);
-    // try {
-    //   await adapter.dissociateUser(this.args.student);
-    //   this.notifications.sendSuccess(`La dissociation du compte de l’élève ${this.args.student.lastName} ${this.args.student.firstName} est réussie.`);
-    // } catch (e) {
-    //   this.notifications.sendError(`La dissociation du compte de l’élève ${this.args.student.lastName} ${this.args.student.firstName} a échoué. Veuillez réessayer.`);
-    // }
-
-    // this.args.close();
-    // this.args.refreshModel();
+  _clean() {
+    this.newStudentNumber = null;
+    this.error = null;
   }
 }
