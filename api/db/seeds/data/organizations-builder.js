@@ -248,4 +248,21 @@ module.exports = function organizationsBuilder({ databaseBuilder }) {
     createdAt: new Date('2020-08-14')
   });
 
+  // PIX-1095
+
+  const userNotGar = databaseBuilder.factory.buildUser.withUnencryptedPassword({
+    email: 'usernotgar@example.net',
+    rawPassword: defaultPassword,
+    cgu: false,
+    samlId: null
+  });
+
+  databaseBuilder.factory.buildSchoolingRegistration({
+    userId: userNotGar.id,
+    firstName: 'firstname',
+    lastName: 'lastname',
+    birthdate: '2010-10-10',
+    organizationId: 3,
+  });
+
 };
