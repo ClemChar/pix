@@ -36,18 +36,19 @@ module.exports = {
       _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements);
 
     const allChallenges = await challengeRepository.findFrenchFranceOperative();
-    const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
-      const challenge = _.find(allChallenges, { id: challengeSnapshot.challengeId });
-      if (!challenge) {
-        return null;
-      }
-      return {
-        // ici on veut l'ancienne compétence (et skill ?)
-        id: challengeSnapshot.id,
-        skills: challenge.skills,
-        competenceId: challenge.competenceId,
-      };
-    });
+    const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => Challenge.findById(allChallenges, challengeSnapshot.challengeId));
+    // const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
+    //   const challenge = Challenge.findById(allChallenges, challengeSnapshot.challengeId);
+    //   if (!challenge) {
+    //     return null;
+    //   }
+    //   return {
+    //     // ici on veut l'ancienne compétence (et skill ?)
+    //     id: challengeSnapshot.id,
+    //     skills: challenge.skills,
+    //     competenceId: challenge.competenceId,
+    //   };
+    // });
 
     challengesAlreadyAnswered.forEach((challenge) => {
       if (!challenge) {

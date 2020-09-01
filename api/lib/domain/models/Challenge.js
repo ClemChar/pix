@@ -126,6 +126,10 @@ class Challenge {
     return _.every(challengeSkillsIdsInTargetProfile, _.includes.bind(null, skillIdsAlreadyTested));
   }
 
+  static findById(challenges, id) {
+    return _(challenges).find({ id });
+  }
+
   static createValidatorForChallengeType({ challengeType, solution }) {
     switch (challengeType) {
       case ChallengeType.QCU:
