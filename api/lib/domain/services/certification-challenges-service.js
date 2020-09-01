@@ -24,31 +24,24 @@ module.exports = {
     // TODOMAYBE: answerSnapshot = {answerId, competenceId, skillId}
     const knowledgeElements = KnowledgeElement.findDirectlyValidatedFromGroups(knowledgeElementsByCompetence);
     const answerIds = _.map(knowledgeElements, 'answerId');
-
-    // ici, récupérer les answers
-    const answers = (await answerRepository.findChallengeIdsFromAnswerIds(answerIds)).map((challengeId) => {
-      return {
-        challengeId,
-      };
-    });
+    const answers = await answerRepository.findByIds(answerIds);
 
     const correctlyAnsweredChallengeSnapshots =
       _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements);
 
     const allChallenges = await challengeRepository.findFrenchFranceOperative();
-    const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => Challenge.findById(allChallenges, challengeSnapshot.challengeId));
-    // const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
-    //   const challenge = Challenge.findById(allChallenges, challengeSnapshot.challengeId);
-    //   if (!challenge) {
-    //     return null;
-    //   }
-    //   return {
-    //     // ici on veut l'ancienne compétence (et skill ?)
-    //     id: challengeSnapshot.id,
-    //     skills: challenge.skills,
-    //     competenceId: challenge.competenceId,
-    //   };
-    // });
+    const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
+      const challenge = _(allChallenges).find({ id: challengeSnapshot.challengeId });
+      if (!challenge) {
+        return null;
+      }
+      return {
+        // ici on veut l'ancienne compétence (et skill ?)
+        id: challenge.id,
+        skills: challenge.skills,
+        competenceId: challenge.competenceId,
+      };
+    });
 
     challengesAlreadyAnswered.forEach((challenge) => {
       if (!challenge) {
@@ -75,7 +68,7 @@ module.exports = {
       userCompetence.skills.forEach((skill) => {
         if (!_hasCompetenceEnoughCertificationChallenges(userCompetence.id, certificationChallengesByCompetence)) {
           const challengesToValidateCurrentSkill = Challenge.findBySkill({ challenges: allChallenges, skill });
-          const challengesLeftToAnswer = _.difference(challengesToValidateCurrentSkill, challengesAlreadyAnswered);
+          const challengesLeftToAnswer = _.differenceBy(challengesToValidateCurrentSkill, challengesAlreadyAnswered, 'id');
 
           const challengesPoolToPickChallengeFrom = (_.isEmpty(challengesLeftToAnswer)) ? challengesToValidateCurrentSkill : challengesLeftToAnswer;
           const challenge = _.sample(challengesPoolToPickChallengeFrom);
