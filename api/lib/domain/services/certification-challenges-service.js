@@ -11,13 +11,9 @@ const challengeRepository = require('../../infrastructure/repositories/challenge
 const answerRepository = require('../../infrastructure/repositories/answer-repository');
 const knowledgeElementRepository = require('../../infrastructure/repositories/knowledge-element-repository');
 
-function _challengeSnapshotsFromChallengesAndKnowledgeElements(challengeIds, knowledgeElements) {
+function _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements) {
   // ici, enrichir avec competenceId et skillId pour passer d'une answerSnapshot à un challengeSnapshot
-  return challengeIds.map((challengeId) => {
-    return {
-      challengeId,
-    };
-  });
+  return answers;
 }
 module.exports = {
 
@@ -30,10 +26,14 @@ module.exports = {
     const answerIds = _.map(knowledgeElements, 'answerId');
 
     // ici, récupérer les answers
-    const challengeIds = await answerRepository.findChallengeIdsFromAnswerIds(answerIds);
+    const answers = (await answerRepository.findChallengeIdsFromAnswerIds(answerIds)).map((challengeId) => {
+      return {
+        challengeId,
+      };
+    });
 
     const correctlyAnsweredChallengeSnapshots =
-      _challengeSnapshotsFromChallengesAndKnowledgeElements(challengeIds, knowledgeElements);
+      _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements);
 
     const allChallenges = await challengeRepository.findFrenchFranceOperative();
     const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
