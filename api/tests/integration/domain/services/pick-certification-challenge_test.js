@@ -677,6 +677,7 @@ describe('Integration | CertificationChallengeService | pickCertificationChallen
   });
 
   describe('When skills are moved in the referential after placement', () => {
+
     /**
      * Lors du positionnement, on a validé en direct l'acquis
      * @Franceconnect4, qui appartenait à la compétence Pix 2.4.
@@ -684,15 +685,14 @@ describe('Integration | CertificationChallengeService | pickCertificationChallen
      * Cet acquis a maintenant été déplacé dans la compétence Pix+ 7.1
      *
      * On veut que le test de certfis contienne une épreuve correspondant à
-     * l'ancienne 2.4
+     * l'ancienne compétence 2.4
      *
      * Dans un autre test, on voudra vérifier que cette question est listée
      * dans la compétence 2.4
      */
-
-    it('', async () => {
+    xit('', async () => {
       // given
-      const learningContentWithMovedSkills = [
+      const learningContentAfterSkillsMoved = [
         {
           id: 'recArea1',
           competences: [
@@ -756,7 +756,7 @@ describe('Integration | CertificationChallengeService | pickCertificationChallen
         }
       ];
 
-      const airtableObjects = airtableBuilder.factory.buildLearningContent(learningContentWithMovedSkills);
+      const airtableObjects = airtableBuilder.factory.buildLearningContent(learningContentAfterSkillsMoved);
       airtableBuilder.mockLists(airtableObjects);
 
       await _buildCorrectAnswerAndKnowledgeElement({

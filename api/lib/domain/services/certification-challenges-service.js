@@ -11,25 +11,50 @@ const challengeRepository = require('../../infrastructure/repositories/challenge
 const answerRepository = require('../../infrastructure/repositories/answer-repository');
 const knowledgeElementRepository = require('../../infrastructure/repositories/knowledge-element-repository');
 
+function _challengeSnapshotsFromChallengesAndKnowledgeElements(challengeIds, knowledgeElements) {
+  // ici, enrichir avec competenceId et skillId pour passer d'une answerSnapshot à un challengeSnapshot
+  return challengeIds.map((challengeId) => {
+    return {
+      challengeId,
+    };
+  });
+}
 module.exports = {
 
   async pickCertificationChallenges(placementProfile) {
     const knowledgeElementsByCompetence = await knowledgeElementRepository
       .findUniqByUserIdGroupedByCompetenceId({ userId: placementProfile.userId, limitDate: placementProfile.profileDate });
 
+    // TODOMAYBE: answerSnapshot = {answerId, competenceId, skillId}
     const knowledgeElements = KnowledgeElement.findDirectlyValidatedFromGroups(knowledgeElementsByCompetence);
     const answerIds = _.map(knowledgeElements, 'answerId');
 
-    const challengeIdsCorrectlyAnswered = await answerRepository.findChallengeIdsFromAnswerIds(answerIds);
+    // ici, récupérer les answers
+    const challengeIds = await answerRepository.findChallengeIdsFromAnswerIds(answerIds);
+
+    const correctlyAnsweredChallengeSnapshots =
+      _challengeSnapshotsFromChallengesAndKnowledgeElements(challengeIds, knowledgeElements);
 
     const allChallenges = await challengeRepository.findFrenchFranceOperative();
-    const challengesAlreadyAnswered = challengeIdsCorrectlyAnswered.map((challengeId) => Challenge.findById(allChallenges, challengeId));
+    const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
+      const challenge = _.find(allChallenges, { id: challengeSnapshot.challengeId });
+      if (!challenge) {
+        return null;
+      }
+      return {
+        // ici on veut l'ancienne compétence (et skill ?)
+        id: challengeSnapshot.id,
+        skills: challenge.skills,
+        competenceId: challenge.competenceId,
+      };
+    });
 
     challengesAlreadyAnswered.forEach((challenge) => {
       if (!challenge) {
         return;
       }
 
+      // grâce au boulot ci-dessus ici ça doit fonctionner
       const userCompetence = _getUserCompetenceByChallengeCompetenceId(placementProfile.userCompetences, challenge);
 
       if (!userCompetence || !userCompetence.isCertifiable()) {
@@ -38,6 +63,7 @@ module.exports = {
 
       challenge.skills
         .filter((skill) => _skillHasAtLeastOneChallenge(skill, allChallenges))
+        // ici c'est la skill archivée (qu'on est censé avoir dans le ke) qu'on veut lister
         .forEach((publishedSkill) => userCompetence.addSkill(publishedSkill));
     });
 
