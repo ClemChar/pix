@@ -675,6 +675,111 @@ describe('Integration | CertificationChallengeService | pickCertificationChallen
     expect(challenges.length).to.equal(1);
     expect(challenges[0].challengeId).to.equal('recArea1_Competence1_Tube1_Skill1_And_Skill2_Challenge');
   });
+
+  describe('When skills are moved in the referential after placement', () => {
+    /**
+     * Lors du positionnement, on a validé en direct l'acquis
+     * @Franceconnect4, qui appartenait à la compétence Pix 2.4.
+     *
+     * Cet acquis a maintenant été déplacé dans la compétence Pix+ 7.1
+     *
+     * On veut que le test de certfis contienne une épreuve correspondant à
+     * l'ancienne 2.4
+     *
+     * Dans un autre test, on voudra vérifier que cette question est listée
+     * dans la compétence 2.4
+     */
+
+    it('', async () => {
+      // given
+      const learningContentWithMovedSkills = [
+        {
+          id: 'recArea1',
+          competences: [
+            {
+              id: 'rec2.4-S_insérer_dans_le_monde_numérique',
+              tubes: [
+                {
+                  id: 'recArea1_Competence2.4_Tube1',
+                  skills: []
+                }
+              ]
+            },
+            {
+              id: 'rec7.1-NouvelleCompetencePix+',
+              origin: 'Pix+',
+              tubes: [
+                {
+                  id: 'recArea1_Competence7.1_Tube1',
+                  skills: [
+                    {
+                      id: 'recFranceConnect4',
+                      nom: '@FranceConnect4',
+                      status: 'actif',
+                      challenges: [
+                        {
+                          id: 'recChallengeFranceConnect4',
+                          statut: 'validé',
+                          langues: ['Franco Français']
+                        }
+                      ]
+                    },
+                    {
+                      id: 'recSimulDroits4',
+                      nom: '@SimulDroits4',
+                      status: 'actif',
+                      challenges: [
+                        {
+                          id: 'recChallengeSimulDroits4',
+                          statut: 'validé',
+                          langues: ['Franco Français']
+                        }
+                      ]
+                    },
+                    {
+                      id: 'recServicesAdministratifs4',
+                      nom: '@ServicesAdministratifs4',
+                      status: 'actif',
+                      challenges: [
+                        {
+                          id: 'recChallengeServicesAdministratifs4',
+                          statut: 'validé',
+                          langues: ['Franco Français']
+                        }
+                      ]
+                    },
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ];
+
+      const airtableObjects = airtableBuilder.factory.buildLearningContent(learningContentWithMovedSkills);
+      airtableBuilder.mockLists(airtableObjects);
+
+      await _buildCorrectAnswerAndKnowledgeElement({
+        userId: certifiableUserId,
+        competenceId: 'rec2.4-S_insérer_dans_le_monde_numérique',
+        skillId: 'recFranceConnect4',
+        challengeId: 'recChallengeFranceConnect4',
+        pixValue: sufficientPixValueToBeCertifiableOnCompetence,
+        acquisitionDate: placementDate,
+      });
+
+      const placementProfile = await placementProfileService.getPlacementProfile({
+        userId: certifiableUserId,
+        limitDate: certificationDate
+      });
+
+      // when
+      const challenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
+
+      //then
+      expect(challenges.map((challenge) => challenge.challengeId)).to.deep.equal(['recChallengeFranceConnect4']);
+    });
+  });
 });
 
 async function _buildCorrectAnswerAndKnowledgeElement({
@@ -705,4 +810,3 @@ async function _buildCorrectAnswerAndKnowledgeElement({
 function _addOneDayToDate(date) {
   return moment(date).add(1, 'day').toDate();
 }
-
