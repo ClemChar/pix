@@ -690,7 +690,7 @@ describe('Integration | CertificationChallengeService | pickCertificationChallen
      * Dans un autre test, on voudra vérifier que cette question est listée
      * dans la compétence 2.4
      */
-    xit('', async () => {
+    it('picks a challenge corresponding to the skill it was linked to during placement', async () => {
       // given
       const learningContentAfterSkillsMoved = [
         {
