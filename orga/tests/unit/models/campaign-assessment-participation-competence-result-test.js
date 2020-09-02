@@ -1,24 +1,23 @@
 import { module, test } from 'qunit';
 import { setupTest } from 'ember-qunit';
-import { run } from '@ember/runloop';
 
-module('Unit | Model | Competence-Result', function(hooks) {
+module('Unit | Model | CampaignAssessmentParticipationCompetenceResult', function(hooks) {
   setupTest(hooks);
 
   module('totalSkillsCountPercentage', function() {
 
     test('should retrieve 100 since the competence is the highest number of total skills count', function(assert) {
       const store = this.owner.lookup('service:store');
-      const model = run(() => store.createRecord('competence-result', {}));
-      const otherCompetenceResult = store.createRecord('competence-result', {
+      const model = store.createRecord('campaign-assessment-participation-competence-result', {});
+      const otherCompetenceResult = store.createRecord('campaign-assessment-participation-competence-result', {
         totalSkillsCount: 1
       });
-      const campaignParticipationResult = store.createRecord('campaign-participation-result', {
+      const campaignAssessmentParticipationResult = store.createRecord('campaign-assessment-participation-result', {
         competenceResults: [otherCompetenceResult, model]
       });
 
       model.set('totalSkillsCount', 2);
-      model.set('campaignParticipationResult', campaignParticipationResult);
+      model.set('campaignAssessmentParticipationResult', campaignAssessmentParticipationResult);
 
       // when
       const totalSkillsCountPercentage = model.get('totalSkillsCountPercentage');
@@ -29,16 +28,16 @@ module('Unit | Model | Competence-Result', function(hooks) {
 
     test('should retrieve 25 since the competence is not the highest number of total skills count', function(assert) {
       const store = this.owner.lookup('service:store');
-      const model = run(() => store.createRecord('competence-result', {}));
-      const otherCompetenceResult = store.createRecord('competence-result', {
+      const model = store.createRecord('campaign-assessment-participation-competence-result', {});
+      const otherCompetenceResult = store.createRecord('campaign-assessment-participation-competence-result', {
         totalSkillsCount: 4
       });
-      const campaignParticipationResult = store.createRecord('campaign-participation-result', {
+      const campaignAssessmentParticipationResult = store.createRecord('campaign-assessment-participation-result', {
         competenceResults: [otherCompetenceResult, model]
       });
 
       model.set('totalSkillsCount', 1);
-      model.set('campaignParticipationResult', campaignParticipationResult);
+      model.set('campaignAssessmentParticipationResult', campaignAssessmentParticipationResult);
 
       // when
       const totalSkillsCountPercentage = model.get('totalSkillsCountPercentage');
@@ -48,34 +47,34 @@ module('Unit | Model | Competence-Result', function(hooks) {
     });
   });
 
-  module('validatedSkillsPercentage', function() {
+  module('validatedSkillsCountPercentage', function() {
 
     test('should retrieve 100 since the user has validated all the competence', function(assert) {
       const store = this.owner.lookup('service:store');
-      const model = run(() => store.createRecord('competence-result', {}));
+      const model = store.createRecord('campaign-assessment-participation-competence-result', {});
 
       model.set('totalSkillsCount', 2);
       model.set('validatedSkillsCount', 2);
 
       // when
-      const validatedSkillsPercentage = model.get('validatedSkillsPercentage');
+      const validatedSkillsCountPercentage = model.get('validatedSkillsCountPercentage');
 
       // then
-      assert.equal(validatedSkillsPercentage, 100);
+      assert.equal(validatedSkillsCountPercentage, 100);
     });
 
     test('should retrieve 25 since the user has validated half of the competence', function(assert) {
       const store = this.owner.lookup('service:store');
-      const model = run(() => store.createRecord('competence-result', {}));
+      const model = store.createRecord('campaign-assessment-participation-competence-result', {});
 
       model.set('totalSkillsCount', 3);
       model.set('validatedSkillsCount', 1);
 
       // when
-      const validatedSkillsPercentage = model.get('validatedSkillsPercentage');
+      const validatedSkillsCountPercentage = model.get('validatedSkillsCountPercentage');
 
       // then
-      assert.equal(validatedSkillsPercentage, 33);
+      assert.equal(validatedSkillsCountPercentage, 33);
     });
   });
 });
