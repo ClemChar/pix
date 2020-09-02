@@ -13,8 +13,13 @@ const knowledgeElementRepository = require('../../infrastructure/repositories/kn
 
 function _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements) {
   // ici, enrichir avec competenceId et skillId pour passer d'une answerSnapshot à un challengeSnapshot
-  return answers;
+  return answers.map((answer) => {
+    return {
+      challengeId: answer.challengeId
+    };
+  });
 }
+
 module.exports = {
 
   async pickCertificationChallenges(placementProfile) {
@@ -37,7 +42,7 @@ module.exports = {
       }
       return {
         // ici on veut l'ancienne compétence (et skill ?)
-        id: challenge.id,
+        id: challengeSnapshot.challengeId,
         skills: challenge.skills,
         competenceId: challenge.competenceId,
       };

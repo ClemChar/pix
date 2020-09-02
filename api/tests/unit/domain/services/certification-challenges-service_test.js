@@ -214,7 +214,7 @@ describe('Unit | Service | Certification Challenge Service', () => {
       it('should select a challenge for every skill', async () => {
         // given
         placementProfile.userCompetences = [userCompetence1];
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdFour' }, 
+        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdFour' },
           { challengeId: 'challengeRecordIdTwo' }]);
         const expectedSkills = [skillCitation4.name, skillRecherche4.name, skillMoteur3.name];
 
@@ -230,7 +230,7 @@ describe('Unit | Service | Certification Challenge Service', () => {
         // given
         placementProfile.userCompetences = [userCompetence1];
         answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-          { challengeId: 'challengeRecordIdFour' }, 
+          { challengeId: 'challengeRecordIdFour' },
           { challengeId: 'challengeRecordIdTwo' }
         ]);
         const expectedSkills = [skillCitation4, skillRecherche4, skillMoteur3];
@@ -248,7 +248,7 @@ describe('Unit | Service | Certification Challenge Service', () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
       answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdFour' }, 
+        { challengeId: 'challengeRecordIdFour' },
         { challengeId: 'challengeRecordIdFive' },
         { challengeId: 'challengeRecordIdSeven' },
       ]);
@@ -269,7 +269,7 @@ describe('Unit | Service | Certification Challenge Service', () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
       answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdSix' }, 
+        { challengeId: 'challengeRecordIdSix' },
         { challengeId: 'challengeRecordIdFive' },
         { challengeId: 'challengeRecordIdSeven' },
       ]);
@@ -290,7 +290,7 @@ describe('Unit | Service | Certification Challenge Service', () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
       answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdSix' }, 
+        { challengeId: 'challengeRecordIdSix' },
         { challengeId: 'challengeRecordIdFive' },
         { challengeId: 'challengeRecordIdSeven' },
         { challengeId: 'challengeRecordIdEight' },
