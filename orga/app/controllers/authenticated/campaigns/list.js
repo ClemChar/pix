@@ -57,6 +57,6 @@ export default class ListController extends Controller {
 
   @action
   goToCampaignPage(campaignId) {
-    this.transitionToRoute('authenticated.campaigns.details', campaignId);
+    this.transitionToRoute('authenticated.campaigns.campaign', campaignId);
   }
 }
