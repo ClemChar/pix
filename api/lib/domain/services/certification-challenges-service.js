@@ -11,11 +11,14 @@ const challengeRepository = require('../../infrastructure/repositories/challenge
 const answerRepository = require('../../infrastructure/repositories/answer-repository');
 const knowledgeElementRepository = require('../../infrastructure/repositories/knowledge-element-repository');
 
-function _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements) {
-  // ici, enrichir avec competenceId et skillId pour passer d'une answerSnapshot à un challengeSnapshot
+function _challengeSnapshotsFromAnswersAndKnowledgeElements(answers, knowledgeElements) {
+  // ici, enrichir avec skillId pour passer d'une answerSnapshot à un challengeSnapshot
   return answers.map((answer) => {
+    const knowledgeElement = knowledgeElements.find((knowledgeElement) => knowledgeElement.answerId === answer.id);
     return {
-      challengeId: answer.challengeId
+      challengeId: answer.challengeId,
+      competenceId: knowledgeElement.competenceId
+      // TODO [1] : skills : [knowledgeElement.skillId]
     };
   });
 }
@@ -32,7 +35,7 @@ module.exports = {
     const answers = await answerRepository.findByIds(answerIds);
 
     const correctlyAnsweredChallengeSnapshots =
-      _challengeSnapshotsFromChallengesAndKnowledgeElements(answers, knowledgeElements);
+      _challengeSnapshotsFromAnswersAndKnowledgeElements(answers, knowledgeElements);
 
     const allChallenges = await challengeRepository.findFrenchFranceOperative();
     const challengesAlreadyAnswered = correctlyAnsweredChallengeSnapshots.map((challengeSnapshot) => {
@@ -40,11 +43,17 @@ module.exports = {
       if (!challenge) {
         return null;
       }
+      /* FIXME: Pourquoi on fait un find sur le challenge du référentiel si c'est pour n'utiliser que les infos du KE ?
+      L'impact que ça a c'est de ne pas tenir compte des questions qui seraient devenues non-opérationnelles dans le choix des skills à tester
+      Ex. Je suis positionné sur la question 4 associée à l'époque à la skill 12
+      Si la question 4 est périmée entre temps, je ne serai pas testé sur la skill 12...
+      On devrait avoir cette restriction de questions opérationnelles seulement au moment du sample pas au moment de la determination des skills à tester
+      */
       return {
         // ici on veut l'ancienne compétence (et skill ?)
         id: challengeSnapshot.challengeId,
-        skills: challenge.skills,
-        competenceId: challenge.competenceId,
+        skills: challenge.skills, // TODO [2] : challenge.skills -> challengeSnapshot.skills
+        competenceId: challengeSnapshot.competenceId,
       };
     });
 
