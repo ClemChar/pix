@@ -1,11 +1,10 @@
 const _ = require('lodash');
 
-const { expect, sinon } = require('../../../test-helper');
+const { expect, sinon, domainBuilder } = require('../../../test-helper');
 
 const CertificationChallenge = require('../../../../lib/domain/models/CertificationChallenge');
 const Challenge = require('../../../../lib/domain/models/Challenge');
 const Competence = require('../../../../lib/domain/models/Competence');
-const KnowledgeElement = require('../../../../lib/domain/models/KnowledgeElement');
 const PlacementProfile = require('../../../../lib/domain/models/PlacementProfile');
 const Skill = require('../../../../lib/domain/models/Skill');
 const UserCompetence = require('../../../../lib/domain/models/UserCompetence');
@@ -132,16 +131,16 @@ describe('Unit | Service | Certification Challenge Service', () => {
         profileDate: 'limitDate'
       });
 
-      sinon.stub(knowledgeElementRepository, 'findUniqByUserIdGroupedByCompetenceId')
-        .withArgs({ userId, limitDate: 'limitDate' }).resolves('ke');
+      sinon.stub(knowledgeElementRepository, 'findUniqByUserIdGroupedByCompetenceId');
 
-      KnowledgeElement.findDirectlyValidatedFromGroups = sinon.stub().returns([{ answerId: 123 }, { answerId: 456 }, { answerId: 789 }]);
       sinon.stub(answerRepository, 'findByIds');
     });
 
     it('should find validated challenges', async () => {
       // given
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdFive' }]);
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([domainBuilder.buildKnowledgeElement({ answerId: 123 })]);
+      answerRepository.findByIds.withArgs([123]).resolves([domainBuilder.buildAnswer({ id: 123, challengeId: 'challengeRecordIdFive' })]);
 
       // when
       await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -153,7 +152,9 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should assign skill to related competence', async () => {
       // given
       placementProfile.userCompetences = [userCompetence2];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdFive' }]);
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([domainBuilder.buildKnowledgeElement({ answerId: 123 })]);
+      answerRepository.findByIds.withArgs([123]).resolves([domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdFive' })]);
       const expectedCertificationChallenge = _createCertificationChallenge(challengeForSkillRemplir2.id, skillRemplir2);
 
       // when
@@ -167,10 +168,24 @@ describe('Unit | Service | Certification Challenge Service', () => {
 
       it('should select no challenge', async () => {
         // given
-        userCompetence1.estimatedLevel = 0;
-        placementProfile.userCompetences = [userCompetence1];
+        const userCompetenceWithLowLevel = {
+          ...userCompetence1,
+          pixScore: 5,
+          estimatedLevel: 0,
+        };
+        placementProfile.userCompetences = [userCompetenceWithLowLevel];
 
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([]);
+        knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+          .resolves([
+            domainBuilder.buildKnowledgeElement({
+              answerId: 123,
+              earnedPix: 5,
+              competenceId: userCompetenceWithLowLevel.id,
+            })
+          ]);
+        answerRepository.findByIds.withArgs([123]).resolves([
+          domainBuilder.buildAnswer({ id: 123 }),
+        ]);
 
         // when
         const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -185,7 +200,13 @@ describe('Unit | Service | Certification Challenge Service', () => {
       it('should not return the skill', async () => {
         // given
         placementProfile.userCompetences = [userCompetence2];
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdEleven' }]);
+        knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+          .resolves([ domainBuilder.buildKnowledgeElement({ answerId: 123 }) ]);
+        answerRepository.findByIds.withArgs([123]).resolves([
+          domainBuilder.buildAnswer({ id: 123 }),
+        ]);
+        answerRepository.findByIds.withArgs([123])
+          .resolves([domainBuilder.buildAnswer({ id: 123, challengeId: 'challengeRecordIdEleven' })]);
 
         // when
         const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -200,7 +221,10 @@ describe('Unit | Service | Certification Challenge Service', () => {
       it('should select an unanswered challenge', async () => {
         // given
         placementProfile.userCompetences = [userCompetence1];
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdOne' }]);
+        knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+          .resolves([ domainBuilder.buildKnowledgeElement({ answerId: 1 }) ]);
+        answerRepository.findByIds.withArgs([1])
+          .resolves([domainBuilder.buildAnswer({ id: 1, challengeId: 'challengeRecordIdOne' })]);
         const expectedSkills = [skillCitation4.name];
 
         // when
@@ -214,8 +238,15 @@ describe('Unit | Service | Certification Challenge Service', () => {
       it('should select a challenge for every skill', async () => {
         // given
         placementProfile.userCompetences = [userCompetence1];
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([{ challengeId: 'challengeRecordIdFour' },
-          { challengeId: 'challengeRecordIdTwo' }]);
+        knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+          .resolves([
+            domainBuilder.buildKnowledgeElement({ answerId: 123 }),
+            domainBuilder.buildKnowledgeElement({ answerId: 456 }),
+          ]);
+        answerRepository.findByIds.withArgs([123, 456]).resolves([
+          domainBuilder.buildAnswer({ id: 123, challengeId: 'challengeRecordIdFour' }),
+          domainBuilder.buildAnswer({ id: 456, challengeId: 'challengeRecordIdTwo' })
+        ]);
         const expectedSkills = [skillCitation4.name, skillRecherche4.name, skillMoteur3.name];
 
         // when
@@ -229,9 +260,14 @@ describe('Unit | Service | Certification Challenge Service', () => {
       it('should return at most one challenge per skill', async () => {
         // given
         placementProfile.userCompetences = [userCompetence1];
-        answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-          { challengeId: 'challengeRecordIdFour' },
-          { challengeId: 'challengeRecordIdTwo' }
+        knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+          .resolves([
+            domainBuilder.buildKnowledgeElement({ answerId: 123 }),
+            domainBuilder.buildKnowledgeElement({ answerId: 456 }),
+          ]);
+        answerRepository.findByIds.withArgs([123, 456]).resolves([
+          domainBuilder.buildAnswer({ id: 123, challengeId: 'challengeRecordIdFour' }),
+          domainBuilder.buildAnswer({ id: 456, challengeId: 'challengeRecordIdTwo' })
         ]);
         const expectedSkills = [skillCitation4, skillRecherche4, skillMoteur3];
 
@@ -247,10 +283,16 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should group skills by competence', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 123 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 456 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 789 }),
+        ]);
       answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdFour' },
-        { challengeId: 'challengeRecordIdFive' },
-        { challengeId: 'challengeRecordIdSeven' },
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdFour' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdFive' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdSeven' }),
       ]);
       const expectedCertificationChallenges = [
         _createCertificationChallenge(challengeForSkillRecherche4.id, skillRecherche4),
@@ -268,10 +310,16 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should sort in desc grouped skills by competence', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 123 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 456 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 789 }),
+        ]);
       answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdSix' },
-        { challengeId: 'challengeRecordIdFive' },
-        { challengeId: 'challengeRecordIdSeven' },
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdSix' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdFive' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdSeven' }),
       ]);
       const expectedCertificationChallenges = [
         _createCertificationChallenge(challengeForSkillRemplir4.id, skillRemplir4),
@@ -289,11 +337,18 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should return the three most difficult skills sorted in desc grouped by competence', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdSix' },
-        { challengeId: 'challengeRecordIdFive' },
-        { challengeId: 'challengeRecordIdSeven' },
-        { challengeId: 'challengeRecordIdEight' },
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 1 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 2 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 3 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 4 }),
+        ]);
+      answerRepository.findByIds.withArgs([1, 2, 3, 4]).resolves([
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdSix' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdFive' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdSeven' }),
+        domainBuilder.buildAnswer({ challengeId: 'challengeRecordIdEight' }),
       ]);
       const expectedCertificationChallenges = [
         _createCertificationChallenge(challengeForSkillRemplir4.id, skillRemplir4),
@@ -311,9 +366,14 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should not add a skill twice', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdFive' },
-        { challengeId: 'challengeRecordIdFive' },
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 1 }),
+          domainBuilder.buildKnowledgeElement({ answerId: 2 }),
+        ]);
+      answerRepository.findByIds.withArgs([1, 2]).resolves([
+        domainBuilder.buildAnswer({ id: 1, challengeId: 'challengeRecordIdFive' }),
+        domainBuilder.buildAnswer({ id: 2, challengeId: 'challengeRecordIdFive' }),
       ]);
       // when
       const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -338,8 +398,12 @@ describe('Unit | Service | Certification Challenge Service', () => {
       ];
       challengeRepository.findFrenchFranceOperative.resolves(onlyOneChallengeForCitation4AndMoteur3);
       placementProfile.userCompetences = [userCompetence1];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdTwo' },
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 1 }),
+        ]);
+      answerRepository.findByIds.withArgs([1]).resolves([
+        domainBuilder.buildAnswer({ id: 1, challengeId: 'challengeRecordIdTwo' }),
       ]);
       // when
       const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -351,8 +415,12 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should not assign skill, when the challenge id is not found', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'nonExistentchallengeRecordId' },
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 1 }),
+        ]);
+      answerRepository.findByIds.withArgs([1]).resolves([
+        domainBuilder.buildAnswer({ id: 1, challengeId: 'nonExistentchallengeRecordId' }),
       ]);
       // when
       const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
@@ -364,8 +432,12 @@ describe('Unit | Service | Certification Challenge Service', () => {
     it('should not assign skill, when the competence is not found', async () => {
       // given
       placementProfile.userCompetences = [userCompetence1, userCompetence2];
-      answerRepository.findByIds.withArgs([123, 456, 789]).resolves([
-        { challengeId: 'challengeRecordIdThree' }]
+      knowledgeElementRepository.findUniqByUserIdGroupedByCompetenceId.withArgs({ userId, limitDate: 'limitDate' })
+        .resolves([
+          domainBuilder.buildKnowledgeElement({ answerId: 1 }),
+        ]);
+      answerRepository.findByIds.withArgs([1]).resolves([
+        domainBuilder.buildAnswer({ id: 1, challengeId: 'challengeRecordIdThree' })]
       );
       // when
       const certificationChallenges = await certificationChallengesService.pickCertificationChallenges(placementProfile);
