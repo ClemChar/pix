@@ -15,7 +15,7 @@ module.exports = {
         'cgu', 'lastTermsOfServiceValidatedAt', 'mustValidateTermsOfService',
         'pixOrgaTermsOfServiceAccepted', 'pixCertifTermsOfServiceAccepted',
         'memberships', 'certificationCenterMemberships',
-        'pixScore', 'scorecards',
+        'scorecards',
         'campaignParticipations', 'hasSeenAssessmentInstructions', 'isCertifiable',
       ],
       memberships: {
@@ -33,15 +33,6 @@ module.exports = {
         relationshipLinks: {
           related: function(record, current, parent) {
             return `/api/users/${parent.id}/certification-center-memberships`;
-          }
-        }
-      },
-      pixScore: {
-        ref: 'id',
-        ignoreRelationshipData: true,
-        relationshipLinks: {
-          related: function(record, current, parent) {
-            return `/api/users/${parent.id}/pixscore`;
           }
         }
       },
