@@ -3,6 +3,7 @@ const { catchErr, databaseBuilder, expect } = require('../../../test-helper');
 const campaignRepository = require('../../../../lib/infrastructure/repositories/campaign-repository');
 const schoolingRegistrationRepository = require('../../../../lib/infrastructure/repositories/schooling-registration-repository');
 const userRepository = require('../../../../lib/infrastructure/repositories/user-repository');
+const studentRepository = require('../../../../lib/infrastructure/repositories/student-repository');
 
 const obfuscationService = require('../../../../lib/domain/services/obfuscation-service');
 const userReconciliationService = require('../../../../lib/domain/services/user-reconciliation-service');
@@ -147,20 +148,35 @@ describe('Integration | UseCases | create-user-and-reconcile-to-schooling-regist
     it('should create and reconcile the external user', async () => {
       // given
       const schoolingRegistration = databaseBuilder.factory.buildSchoolingRegistration({ firstName, lastName, organizationId });
+      const otherAccount = databaseBuilder.factory.buildUser(
+        {
+          firstName: firstName,
+          lastName: lastName,
+          birthdate: schoolingRegistration.birthdate,
+          samlId: 12345678,
+        });
+      const otherOrganization = databaseBuilder.factory.buildOrganization({ type: 'SCO' });
+      databaseBuilder.factory.buildSchoolingRegistration(
+        {
+          organizationId: otherOrganization.id,
+          firstName: schoolingRegistration.firstName,
+          lastName: schoolingRegistration.lastName,
+          birthdate: schoolingRegistration.birthdate,
+          nationalStudentId: schoolingRegistration.nationalStudentId,
+          userId: otherAccount.id
+        });
       schoolingRegistration.userId = undefined;
       await databaseBuilder.commit();
 
       // when
       const user = await createUserAndReconcileToSchoolingRegistrationByExternalUser({ campaignCode, token,
-        birthdate: schoolingRegistration.birthdate, campaignRepository, tokenService, schoolingRegistrationRepository,
+        birthdate: schoolingRegistration.birthdate, campaignRepository, tokenService, schoolingRegistrationRepository, studentRepository,
         userRepository, userReconciliationService, obfuscationService });
 
       // then
       expect(user.firstName).to.equal(firstName);
       expect(user.lastName).to.equal(lastName);
       expect(user.samlId).to.equal(samlId);
-      expect(user.password).to.be.empty;
-      expect(user.cgu).to.be.false;
     });
 
     context('When the external user is already reconciled', () => {
