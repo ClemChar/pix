@@ -385,6 +385,29 @@ module.exports = {
     }
   },
 
+  async reconcileExistingExternalUserToSchoolingRegistration({ domainUser, schoolingRegistrationId }) {
+    const userToCreate = _adaptModelToDb(domainUser);
+    const trx = await Bookshelf.knex.transaction();
+
+    try {
+      const user = await trx('users').where({ samlId: userToCreate.samlId }).first();
+      if (!user) {
+        throw new UserNotFoundError();
+      }
+      const userId = user.id;
+
+      await trx('schooling-registrations')
+        .where('id', schoolingRegistrationId)
+        .update({ userId });
+
+      await trx.commit();
+      return userId;
+    } catch (error) {
+      await trx.rollback();
+      throw error;
+    }
+  },
+
   async isUsernameAvailable(username) {
     const foundUser = await BookshelfUser
       .where({ username })
@@ -432,6 +455,21 @@ module.exports = {
         }
         throw err;
       });
-  }
+  },
+
+  async updateUserAttributes(id, userAttributes) {
+    try {
+      const bookshelfUser = await BookshelfUser
+        .where({ id })
+        .save(userAttributes, { patch: true, method: 'update' });
+      return bookshelfUser.toDomainEntity();
+
+    } catch (err) {
+      if (err instanceof BookshelfUser.NoRowsUpdatedError) {
+        throw new UserNotFoundError(`User not found for ID ${id}`);
+      }
+      throw err;
+    }
+  },
 
 };

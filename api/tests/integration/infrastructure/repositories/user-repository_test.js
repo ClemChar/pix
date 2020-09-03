@@ -763,6 +763,46 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
     });
   });
 
+  describe('#updateUserAttributes', () => {
+
+    let userInDb;
+
+    beforeEach(async () => {
+      userInDb = databaseBuilder.factory.buildUser(userToInsert);
+      await databaseBuilder.commit();
+    });
+
+    it('should update samlId of the user', async () => {
+      // given
+      const patchUserSamlId = {
+        id : userInDb.id,
+        samlId : '123456789',
+      };
+
+      // when
+      const updatedUser = await userRepository.updateUserAttributes(userInDb.id, patchUserSamlId);
+
+      // then
+      expect(updatedUser).to.be.an.instanceOf(User);
+      expect(updatedUser.samlId).to.equal(patchUserSamlId.samlId);
+    });
+
+    it('should throw UserNotFoundError when user id not found', async () => {
+      // given
+      const wrongUserId = 0;
+      const patchUserSamlId = {
+        samlId : '123456789',
+      };
+
+      // when
+      const error = await catchErr(userRepository.updateUserAttributes)(wrongUserId, patchUserSamlId);
+
+      // then
+      expect(error).to.be.instanceOf(UserNotFoundError);
+    });
+
+  });
+
   describe('#updateUserDetailsForAdministration', () => {
 
     let userInDb;
@@ -1265,6 +1305,71 @@ describe('Integration | Infrastructure | Repository | UserRepository', () => {
         expect(foundSchoolingRegistrations[0].userId).to.equal(userId);
         const foundUser = await knex('users').where({ email });
         expect(foundUser).to.have.lengthOf(0);
+      });
+    });
+  });
+
+  describe('#reconcileExistingUserToSchoolingRegistration', () => {
+    const samlId = '12345678';
+    let schoolingRegistrationId;
+    let organizationId;
+    let domainUser;
+
+    beforeEach(() => {
+      // given
+      organizationId = databaseBuilder.factory.buildOrganization().id;
+      schoolingRegistrationId = databaseBuilder.factory.buildSchoolingRegistration({ userId: null, organizationId }).id;
+      domainUser = databaseBuilder.factory.buildUser({ samlId });
+
+      return databaseBuilder.commit();
+    });
+
+    afterEach(async () => {
+      await knex('schooling-registrations').delete();
+      await knex('users').delete();
+    });
+
+    context('when external user has already an account with a samlId authentication ', function() {
+
+      it('should found existing user by samlId', async () => {
+        // when
+        const result = await userRepository.reconcileExistingExternalUserToSchoolingRegistration({ domainUser, schoolingRegistrationId });
+
+        // then
+        const foundUser = await userRepository.getBySamlId(samlId);
+        expect(foundUser).to.not.be.undefined;
+        expect(result).to.equal(foundUser.id);
+      });
+
+      it('should associate user to student', async () => {
+        // when
+        await userRepository.reconcileExistingExternalUserToSchoolingRegistration({ domainUser, schoolingRegistrationId });
+
+        // then
+        const foundSchoolingRegistrations = await knex('schooling-registrations').where('id', schoolingRegistrationId);
+        expect(foundSchoolingRegistrations[0].userId).to.not.be.undefined;
+      });
+    });
+
+    context('when creation succeeds and association fails', () => {
+
+      it('should rollback after association fails', async () => {
+        // given
+        const userId = databaseBuilder.factory.buildUser().id;
+        schoolingRegistrationId = databaseBuilder.factory.buildSchoolingRegistration({ userId, organizationId }).id;
+        await databaseBuilder.commit();
+        const notExistingSamlId = '99999';
+        domainUser.samlId = notExistingSamlId;
+
+        // when
+        const error = await catchErr(userRepository.reconcileExistingExternalUserToSchoolingRegistration)({ domainUser, schoolingRegistrationId });
+
+        // then
+        expect(error).to.be.instanceOf(UserNotFoundError);
+        const foundSchoolingRegistrations = await knex('schooling-registrations').where('id', schoolingRegistrationId);
+        expect(foundSchoolingRegistrations[0].userId).to.equal(userId);
+        const foundUser = await userRepository.getBySamlId(notExistingSamlId);
+        expect(foundUser).to.be.null;
       });
     });
   });
