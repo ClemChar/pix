@@ -1,4 +1,5 @@
 const schoolingRegistrationUserAssociationController = require('./schooling-registration-user-association-controller');
+const securityPreHandlers = require('../security-pre-handlers');
 const Joi = require('@hapi/joi').extend(require('@hapi/joi-date'));
 const JSONAPIError = require('jsonapi-serializer').Error;
 
@@ -149,6 +150,45 @@ exports.register = async function(server) {
         tags: ['api', 'schoolingRegistrationUserAssociation']
       }
     },
+      
+    {
+      method: 'PATCH',
+      path: '/api/schooling-registration-user-associations/{id}',
+      config: {
+        pre: [{
+          method: securityPreHandlers.checkUserIsAdminInSUPOrganizationManagingStudents,
+          assign: 'isAdminInOrganizationManagingStudents'
+        }],
+        handler: schoolingRegistrationUserAssociationController.updateStudentNumber,
+        validate: {
+          options: {
+            allowUnknown: true
+          },
+          payload: Joi.object({
+            data: {
+              attributes: {
+                'student-number': Joi.string().empty(Joi.string().regex(/^\s*$/)).required()
+              },
+            },
+          }),
+          failAction: (request, h) => {
+            const errorHttpStatusCode = 422;
+            const jsonApiError = new JSONAPIError({
+              status: errorHttpStatusCode.toString(),
+              title: 'Unprocessable entity',
+              detail: 'Un des champs saisis n’est pas valide.',
+            });
+            return h.response(jsonApiError).code(errorHttpStatusCode).takeover();
+          }
+        },
+        notes: [
+          '- Elle permet de savoir si un élève identifié par son nom, prénom et date de naissance est inscrit à ' +
+          'l\'organisation détenant la campagne. Cet élève n\'est, de plus, pas encore associé à l\'organisation.'
+        ],
+        tags: ['api', 'schoolingRegistrationUserAssociation']
+      }
+    },
+
     {
       method: 'DELETE',
       path: '/api/schooling-registration-user-associations',

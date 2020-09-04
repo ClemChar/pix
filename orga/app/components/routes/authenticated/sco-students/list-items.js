@@ -12,7 +12,6 @@ export default class ListItems extends Component {
 
   @tracked student = null;
   @tracked isShowingAuthenticationMethodModal = false;
-  @tracked isShowingEditStudentNumberModal = false;
   @tracked isShowingDissociateModal = false;
 
   @action
@@ -24,17 +23,6 @@ export default class ListItems extends Component {
   @action
   closeAuthenticationMethodModal() {
     this.isShowingAuthenticationMethodModal = false;
-  }
-
-  @action
-  openEditStudentNumberModal(student) {
-    this.student = student;
-    this.isShowingEditStudentNumberModal = true;
-  }
-
-  @action
-  closeEditStudentNumberModal() {
-    this.isShowingEditStudentNumberModal = false;
   }
 
   @action

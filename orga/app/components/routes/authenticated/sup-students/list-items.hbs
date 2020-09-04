@@ -49,6 +49,21 @@
             <td>{{student.lastName}}</td>
             <td>{{student.firstName}}</td>
             <td>{{moment-format student.birthdate 'DD/MM/YYYY' allow-empty=true}}</td>
+            <td class="list-students-page__actions">
+              {{#if student.isStudentAssociated}}
+                <Dropdown::IconTrigger
+                  @icon="ellipsis-v"
+                  @dropdownButtonClass="list-students-page__dropdown-button"
+                  @dropdownContentClass="list-students-page__dropdown-content"
+                >
+                  {{#if this.currentUser.isAdminInOrganization}}
+                    <Dropdown::Item @onClick={{fn this.openEditStudentNumberModal student}}>
+                      Éditer le numéro étudiant
+                    </Dropdown::Item>
+                  {{/if}}
+                </Dropdown::IconTrigger>
+              {{/if}}
+            </td>
           </tr>
         {{/each}}
 
@@ -60,6 +75,19 @@
       <div class="table__empty content-text">Aucun étudiant.</div>
     {{/unless}}
   </div>
+
+  <EditStudentNumberModal
+    @student={{this.student}}
+    @display={{this.isShowingEditStudentNumberModal}}
+    @close={{this.closeEditStudentNumberModal}}
+    @refreshModel={{@refreshModel}}
+  />
 </div>
+
+{{#if @isLoading}}
+  <ModalDialog @translucentOverlay={{true}} @containerClass="modal__translucent">
+    <PixLoader />
+  </ModalDialog>
+{{/if}}
 
 <PaginationControl @pagination={{@students.meta}}/>

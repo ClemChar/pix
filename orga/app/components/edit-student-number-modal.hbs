@@ -1,8 +1,6 @@
 <Modal::Dialog class="edit-student-number-modal" @title="Édition du numéro étudiant" @display={{@display}} @close={{this.close}}>
   <Modal::Body class="edit-student-number-modal__content">
-    <p class="content-text">Numéro étudiant actuel de {{@student.firstName}} {{@student.lastName}} est : 
-      <span class=" content-text--info">{{@student.studentNumber}}</span>
-    </p>
+    <p class="content-text">Numéro étudiant actuel de {{@student.firstName}} {{@student.lastName}} est : <span class=" content-text--info">{{@student.studentNumber}}</span></p>
     <p class="content-text">
       Nouveau numéro étudiant
     </p>
@@ -29,5 +27,6 @@
     {{else}}
       <button data-test-updateButton type="button" id="updateStudentNumber" class="button" {{on 'click' (fn this.updateStudentNumber)}}>Mettre à jour</button>
     {{/if}}
+    
   </Modal::Footer>
 </Modal::Dialog>

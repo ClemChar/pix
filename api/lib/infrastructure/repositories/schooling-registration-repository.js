@@ -155,6 +155,22 @@ module.exports = {
       .then((schoolingRegistration) => bookshelfToDomainConverter.buildDomainObject(BookshelfSchoolingRegistration, schoolingRegistration));
   },
 
+  async updateStudentNumber(studentId, studentNumber) {
+    try {
+      await BookshelfSchoolingRegistration
+        .where('id', studentId)
+        .save({ studentNumber }, {
+          patch: true,
+        });
+    } catch (error) {
+      console.log(error);
+      // const errorMessage  = `Le numéro étudiant saisi est déjà utilisé par l’étudiant ${firstName} ${lastName}.`;
+      // throw new AlreadyExistingEntity(errorMessage);
+    }
+  },
+
+  // utiliser get 
+
   get(schoolingRegistrationId) {
     return BookshelfSchoolingRegistration
       .where({ id: schoolingRegistrationId })

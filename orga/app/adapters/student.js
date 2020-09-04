@@ -21,7 +21,7 @@ export default class StudentAdapter extends ApplicationAdapter {
     return this.ajax(url, 'DELETE', { data });
   }
 
-  updateStudentNumber(studentId, newStudentNumber) {
+  async updateStudentNumber(student, newStudentNumber) {
     const data = {
       data: {
         attributes: {
@@ -30,7 +30,7 @@ export default class StudentAdapter extends ApplicationAdapter {
       }
     };
 
-    const url = `${this.host}/${this.namespace}/schooling-registration-user-associations/${studentId}`;
+    const url = `${this.host}/${this.namespace}/schooling-registration-user-associations/${student.id}`;
     return this.ajax(url, 'PATCH', { data });
   }
 }

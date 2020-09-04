@@ -7,10 +7,12 @@ module('Unit | Adapters | student', function(hooks) {
   setupTest(hooks);
 
   let adapter;
+  let ajaxStub;
 
   hooks.beforeEach(function() {
     adapter = this.owner.lookup('adapter:student');
-    adapter.ajax = sinon.stub().resolves();
+    ajaxStub = sinon.stub();
+    adapter.set('ajax', ajaxStub);
   });
 
   module('#urlForQuery', () => {
@@ -24,13 +26,7 @@ module('Unit | Adapters | student', function(hooks) {
   });
 
   module('#dissociateUser', function() {
-    let ajaxStub;
-
-    hooks.beforeEach(function() {
-      ajaxStub = sinon.stub();
-      adapter.set('ajax', ajaxStub);
-    });
-
+    
     test('it performs the request to dissociate user from student', async function(assert) {
       const model = { id: 12345 };
       const data = {
@@ -45,6 +41,28 @@ module('Unit | Adapters | student', function(hooks) {
       await adapter.dissociateUser(model);
 
       assert.ok(ajaxStub.calledWith(url, 'DELETE', { data }));
+    });
+  });
+
+  module('updateStudentNumber adapter', function() {
+
+    test('it performs the request to update the student number', async function(assert) {
+      const model = { 
+        newStudentNumber: 54321,
+        studentId: 10
+      };
+      const data = {
+        data: {
+          attributes: {
+            'student-number': model.newStudentNumber,
+          }
+        }
+      };
+      const url = `${ENV.APP.API_HOST}/api/schooling-registration-user-associations/${model.studentId}`;
+
+      await adapter.updateStudentNumber(model.studentId, model.newStudentNumber);
+
+      assert.ok(ajaxStub.calledWith(url, 'PATCH', { data }));
     });
   });
 });

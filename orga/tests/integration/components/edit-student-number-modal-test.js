@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { module, test } from 'qunit';
 import Service from '@ember/service';
 import sinon from 'sinon';
@@ -7,7 +6,7 @@ import { fillIn, click, render } from '@ember/test-helpers';
 import hbs from 'htmlbars-inline-precompile';
 import EmberObject from '@ember/object';
 
-module.only('Integration | Component | edit-student-number-modal', function(hooks) {
+module('Integration | Component | edit-student-number-modal', function(hooks) {
   setupRenderingTest(hooks);
   let closeStub;
   let refreshModelStub;
