@@ -33,4 +33,24 @@ const buildArea = function buildArea({
   };
 };
 
+buildArea.fromDomain = function buildAreaFromDomain({
+  domainArea,
+  locale = 'fr-fr',
+  createdAt = '2018-03-15T14:38:03.000Z',
+}) {
+  return {
+    id: domainArea.id,
+    'fields': {
+      'id persistant': domainArea.id,
+      'Competences (identifiants) (id persistant)': domainArea.competences,
+      'Couleur': domainArea.color,
+      'Code': domainArea.code,
+      'Titre fr-fr': locale === 'fr-fr' ? domainArea.title : 'un titre français',
+      'Titre en-us': locale === 'fr-fr' ? 'an english title' : domainArea.title,
+      'Nom': domainArea.name,
+    },
+    'createdTime': createdAt,
+  };
+};
+
 module.exports = buildArea;
