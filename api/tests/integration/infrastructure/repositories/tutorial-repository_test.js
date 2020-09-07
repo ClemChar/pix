@@ -27,7 +27,7 @@ describe('Integration | Repository | tutorial-repository', () => {
       // then
       expect(tutorials).to.have.lengthOf(2);
       expect(tutorials[0]).to.be.instanceof(Tutorial);
-      expect(tutorials).to.be.deep.equal([tutorial0, tutorial1]);
+      expect(tutorials).to.deep.include.members([tutorial0, tutorial1]);
     });
 
     it('should associate userTutorial when it exists for provided user', async () => {
@@ -81,7 +81,7 @@ describe('Integration | Repository | tutorial-repository', () => {
       // then
       expect(tutorials).to.have.lengthOf(2);
       expect(tutorials[0]).to.be.instanceof(Tutorial);
-      expect(tutorials).to.be.deep.equal([tutorial0, tutorial1]);
+      expect(tutorials).to.deep.include.members([tutorial0, tutorial1]);
     });
   });
 
@@ -131,7 +131,7 @@ describe('Integration | Repository | tutorial-repository', () => {
       // then
       expect(tutorials).to.have.lengthOf(2);
       expect(tutorials[0]).to.be.instanceof(Tutorial);
-      expect(tutorials).to.be.deep.equal([tutorial0, tutorial1]);
+      expect(tutorials).to.deep.include.members([tutorial0, tutorial1]);
     });
   });
 });

@@ -54,7 +54,7 @@ describe('Integration | Repository | skill-repository', () => {
       // then
       expect(skills).to.have.lengthOf(2);
       expect(skills[0]).to.be.instanceof(Skill);
-      expect(skills).to.be.deep.equal([activeSkill, archivedSkill]);
+      expect(skills).to.deep.include.members([activeSkill, archivedSkill]);
     });
   });
 
@@ -77,7 +77,7 @@ describe('Integration | Repository | skill-repository', () => {
       // then
       expect(skills).to.have.lengthOf(2);
       expect(skills[0]).to.be.instanceof(Skill);
-      expect(skills).to.be.deep.equal([activeSkill, archivedSkill]);
+      expect(skills).to.deep.include.members([activeSkill, archivedSkill]);
     });
   });
 });
